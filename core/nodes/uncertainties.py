@@ -1,10 +1,11 @@
 from langchain_core.messages import HumanMessage
-from core.models import get_local_llm
+
+from core.models import get_low_power_llm
 from core.state import InferaState
 
 
 def identify_uncertainties(state: InferaState) -> dict:
-    llm = get_local_llm()
+    llm = get_low_power_llm()
     topic = state["topic"]
     analysis = state["analysis"]
     research = state["research"]
@@ -24,12 +25,9 @@ Instructions:
 - Base your uncertainties STRICTLY on the research above.
 - Do not invent generic points.
 - Each uncertainty must be specific and forward-looking (2–5 year horizon).
-- Return exactly 5 distinct uncertainties. For each, include why it matters and one observable signal that could resolve it.
+- Return exactly 5 uncertainties.
 - Format as a clean numbered list. No extra commentary.
 """
 
     response = llm.invoke([HumanMessage(content=prompt)])
-    return {
-        "uncertainties": response.content,
-        "current_step": "uncertainties_complete"
-    }
+    return {"uncertainties": response.content, "current_step": "uncertainties_complete"}

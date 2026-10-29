@@ -1,4 +1,6 @@
 from langchain_core.messages import HumanMessage
+
+from core.agents.entity import entity_card_to_context
 from core.models import get_groq_llm
 from core.state import BaseRateEstimate
 
@@ -9,7 +11,7 @@ def estimate_base_rate_for_scenario(
     time_horizon: str,
 ) -> BaseRateEstimate:
     """Per-scenario base rate, matched to THIS forecast's direction and scale."""
-    llm = get_groq_llm(max_tokens=400)
+    llm = get_groq_llm()
     entity_ctx = entity_card_to_context(entity_card)
 
     prompt = f"""You are a base-rate forecasting specialist for ONE specific scenario.
@@ -24,8 +26,7 @@ RULES:
 1. Match reference class DIRECTION to this forecast (success vs pushback/failure).
 2. Match SCALE to the entity (state commissioner ≠ national PM / national agency).
 3. Give estimated_base_rate_pct 0-100.
-4. Name 1-3 comparable cases at similar scale, explaining briefly why each is comparable.
-5. State the main limitation or mismatch in the reference class.
+4. Name 1-3 comparable cases at similar scale, or say if none fit well.
 
 Return structured BaseRateEstimate.
 """
