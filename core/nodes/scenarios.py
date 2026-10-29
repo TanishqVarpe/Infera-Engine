@@ -36,7 +36,11 @@ STRICT RULES:
 - forecast_statement must NOT restate research facts. Infer second-order effects.
 - time_horizon: 3-6mo | 6-12mo | 1-3yr
 - Exactly 3 scenarios. At least one must be resistance/pushback/failure.
-- Provide 3-6 evidence factors in score_components.factors.
+- Use only facts and sources present in the research brief; do not invent evidence.
+- Keep each forecast_statement to one concise sentence (max 60 words).
+- Include at most 3 concise items in each evidence list and inferred_from (max 20 words each).
+- Provide 3-4 evidence factors; keep each factor and reason to one short sentence.
+- Avoid quotation marks inside generated text; paraphrase quoted phrases.
 - Do NOT assign probability_label or numeric score.
 
 SCORING RULE (critical):

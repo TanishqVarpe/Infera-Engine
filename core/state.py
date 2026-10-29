@@ -1,4 +1,4 @@
-from typing import Literal, TypedDict
+from typing import Annotated, Literal, TypedDict
 
 from pydantic import BaseModel, Field
 
@@ -14,23 +14,23 @@ class EntityCard(BaseModel):
 
 
 class EvidenceFactor(BaseModel):
-    factor: str
+    factor: Annotated[str, Field(max_length=120)]
     supports_forecast: bool  # True if makes THIS scenario's claim more likely
     strength: Literal["strong", "moderate", "weak"]
-    reason: str
+    reason: Annotated[str, Field(max_length=180)]
 
 
 class ScoreComponents(BaseModel):
-    factors: list[EvidenceFactor] = Field(min_length=3, max_length=6)
+    factors: list[EvidenceFactor] = Field(min_length=3, max_length=4)
 
 
 class Scenario(BaseModel):
-    scenario_name: str
+    scenario_name: Annotated[str, Field(max_length=80)]
     time_horizon: Literal["3-6mo", "6-12mo", "1-3yr"]
-    forecast_statement: str
-    inferred_from: list[str]
-    evidence_for: list[str]
-    evidence_against: list[str]
+    forecast_statement: Annotated[str, Field(max_length=500)]
+    inferred_from: list[Annotated[str, Field(max_length=120)]] = Field(max_length=3)
+    evidence_for: list[Annotated[str, Field(max_length=200)]] = Field(max_length=3)
+    evidence_against: list[Annotated[str, Field(max_length=200)]] = Field(max_length=3)
     score_components: ScoreComponents
     score: float = 0.0
     probability_label: Literal["Low", "Medium", "High"] = "Low"
@@ -38,7 +38,7 @@ class Scenario(BaseModel):
 
 
 class ScenarioSet(BaseModel):
-    scenarios: list[Scenario]
+    scenarios: list[Scenario] = Field(min_length=3, max_length=3)
 
 
 class BaseRateEstimate(BaseModel):
