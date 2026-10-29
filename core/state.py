@@ -41,6 +41,32 @@ class ScenarioSet(BaseModel):
     scenarios: list[Scenario]
 
 
+class ScenarioDraftFactor(BaseModel):
+    factor: str
+    supports_forecast: bool
+    strength: Literal["strong", "moderate", "weak"]
+    reason: str
+
+
+class ScenarioDraftScoreComponents(BaseModel):
+    # Count limits are checked when converting drafts into final Scenario models.
+    factors: List[ScenarioDraftFactor]
+
+
+class ScenarioDraft(BaseModel):
+    scenario_name: str
+    time_horizon: Literal["3-6mo", "6-12mo", "1-3yr"]
+    forecast_statement: str
+    inferred_from: List[str]
+    evidence_for: List[str]
+    evidence_against: List[str]
+    score_components: ScenarioDraftScoreComponents
+
+
+class ScenarioDraftSet(BaseModel):
+    scenarios: List[ScenarioDraft]
+
+
 class BaseRateEstimate(BaseModel):
     reference_class: str
     estimated_base_rate_pct: int = Field(ge=0, le=100)

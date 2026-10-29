@@ -1,13 +1,12 @@
 import difflib
 
 from langchain_core.messages import HumanMessage
-
-from core.agents.base_rate import estimate_base_rate_for_scenario
+from core.models import get_groq_llm
 from core.agents.critic import critique_scenarios
 from core.agents.entity import entity_card_to_context
-from core.models import get_groq_llm
-from core.scoring import adjust_for_base_rate, compute_score, score_to_label
+from core.agents.base_rate import estimate_base_rate_for_scenario
 from core.state import InferaState, ScenarioSet
+from core.scoring import compute_score, score_to_label, adjust_for_base_rate
 
 
 def is_near_duplicate(forecast: str, research: str, threshold: float = 0.75) -> bool:
@@ -19,7 +18,7 @@ def is_near_duplicate(forecast: str, research: str, threshold: float = 0.75) -> 
 
 
 def generate_scenarios(state: InferaState) -> dict:
-    llm = get_groq_llm()
+    llm = get_groq_llm(max_tokens=2_700)
     topic = state["topic"]
     research = state.get("research") or ""
     entity_card = state.get("entity_card") or {}
@@ -36,8 +35,11 @@ STRICT RULES:
 - forecast_statement must NOT restate research facts. Infer second-order effects.
 - time_horizon: 3-6mo | 6-12mo | 1-3yr
 - Exactly 3 scenarios. At least one must be resistance/pushback/failure.
-- Provide 3-6 evidence factors in score_components.factors.
-- Do NOT assign probability_label or numeric score.
+- Provide exactly 3 evidence factors per scenario.
+- Make each scenario meaningfully distinct and conditional, not just optimistic/base/pessimistic restatements.
+- Keep each forecast under 50 words. Explain each evidence factor in one specific sentence
+  tied to the research. Give 2-3 concise evidence-for and evidence-against items per scenario.
+- Include a clear causal chain and at least one signpost that would indicate the scenario is unfolding.
 
 SCORING RULE (critical):
 Each factor is relative to THIS scenario's own forecast_statement.
@@ -48,16 +50,31 @@ Example: "industry lobbying history"
   - for a PUSHBACK scenario → supports_forecast=true
 strength: strong | moderate | weak
 
-Return structured ScenarioSet.
+Return structured ScenarioDraftSet.
 """
 
-    structured = llm.with_structured_output(ScenarioSet)
-    draft = structured.invoke([HumanMessage(content=draft_prompt)])
+    structured = groq_structured_output(llm, ScenarioDraftSet)
+    draft = invoke_groq(
+        structured,
+        [HumanMessage(content=draft_prompt)],
+        max_output_tokens=2_700,
+        output_schema=ScenarioDraftSet,
+    )
+    if len(draft.scenarios) != 3:
+        raise ValueError(
+            f"ScenarioDraftSet returned {len(draft.scenarios)} scenarios; expected 3."
+        )
 
     finalized = []
     text_parts = []
 
-    for s in draft.scenarios:
+    for draft_scenario in draft.scenarios:
+        s = Scenario(
+            **draft_scenario.model_dump(),
+            score=0,
+            probability_label="Low",
+            probability_reason="",
+        )
         br = estimate_base_rate_for_scenario(
             entity_card=entity_card,
             forecast_statement=s.forecast_statement,

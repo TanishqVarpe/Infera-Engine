@@ -1,12 +1,11 @@
 from langchain_core.messages import HumanMessage
-
 from core.models import get_groq_llm
 from core.state import EntityCard
 
 
 def resolve_entity_provisional(topic: str) -> EntityCard:
     """Phase 1: resolve from topic string only. Mark as provisional."""
-    llm = get_groq_llm()
+    llm = get_groq_llm(max_tokens=500)
     prompt = f"""You are an entity resolution specialist.
 
 Topic: {topic}
@@ -27,15 +26,20 @@ Return:
 
 Be honest. If unsure, use medium/low confidence.
 """
-    structured = llm.with_structured_output(EntityCard)
-    card = structured.invoke([HumanMessage(content=prompt)])
+    structured = groq_structured_output(llm, EntityCard)
+    card = invoke_groq(
+        structured,
+        [HumanMessage(content=prompt)],
+        max_output_tokens=500,
+        output_schema=EntityCard,
+    )
     card.resolution_stage = "provisional"
     return card
 
 
 def reconcile_entity(provisional: dict, research_brief: str) -> EntityCard:
     """Phase 2: correct provisional card against grounded research."""
-    llm = get_groq_llm()
+    llm = get_groq_llm(max_tokens=500)
     prompt = f"""You are reconciling a PROVISIONAL entity card against a REAL research brief.
 
 PROVISIONAL CARD:
@@ -56,8 +60,13 @@ Rules:
 
 Return the corrected EntityCard.
 """
-    structured = llm.with_structured_output(EntityCard)
-    card = structured.invoke([HumanMessage(content=prompt)])
+    structured = groq_structured_output(llm, EntityCard)
+    card = invoke_groq(
+        structured,
+        [HumanMessage(content=prompt)],
+        max_output_tokens=500,
+        output_schema=EntityCard,
+    )
     card.resolution_stage = "reconciled"
     return card
 

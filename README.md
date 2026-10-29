@@ -142,7 +142,24 @@ Infera-Engine/
 ### Language Models
 
 - Groq API
-- Llama 3
+- GPT-OSS 20B (`openai/gpt-oss-20b`)
+
+Create a Groq API key and set it in the project-root `.env` file:
+
+```env
+GROQ_API_KEY=your_groq_api_key
+```
+
+The Groq client caps generated tokens per call and uses shared estimated limits
+across model calls in this process: 8,000 tokens and 30 requests per rolling 60
+seconds. Calls wait until capacity is available. Prompts request fuller,
+evidence-linked research and analysis while output caps provide room for those
+responses. Search results are shortened before they are sent to the model.
+These local estimates cannot account for other apps using the same Groq
+organization or API key.
+
+Structured responses use JSON-object mode and are validated locally against
+the app's Pydantic models.
 
 ### Knowledge Representation
 

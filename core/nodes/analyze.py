@@ -1,5 +1,6 @@
 from langchain_core.messages import HumanMessage
-
+from core.models import get_local_llm
+from core.state import InferaState, EntityCard
 from core.agents.entity import entity_card_to_context
 from core.models import get_low_power_llm
 from core.state import InferaState
@@ -20,7 +21,7 @@ def analyze_topic(state: InferaState) -> dict:
             "Run Entity Reconciliation after Research first."
         )
 
-    llm = get_low_power_llm()
+    llm = get_local_llm()
     entity_ctx = entity_card_to_context(entity_raw)
 
     prompt = f"""You are a strategic foresight analyst.
@@ -39,16 +40,17 @@ Topic: {state["topic"]}
 Respond in this format:
 
 Current Status:
-<2-4 sentences grounded in the research>
+<3-5 sentences grounded in the research, distinguishing confirmed facts from inference>
 
 Key Drivers:
-- driver 1
-- driver 2
-- driver 3
-- driver 4
+- List 4 drivers. For each, explain the causal link to the topic and cite a research fact.
 """
 
-    response = llm.invoke([HumanMessage(content=prompt)])
+    response = invoke_groq(
+        llm,
+        [HumanMessage(content=prompt)],
+        max_output_tokens=550,
+    )
     return {
         "analysis": response.content,
         "current_step": "analysis_complete",

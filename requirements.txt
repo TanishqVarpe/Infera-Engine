@@ -1,4 +1,8 @@
-# Project dependencies are maintained in pyproject.toml.
-# Install the application with development tools using:
-#   python -m pip install -e ".[dev]"
-.[dev]
+langgraph
+langchain-core
+langchain-ollama
+langchain-groq
+streamlit
+python-dotenv
+pydantic
+ddgs
