@@ -20,7 +20,7 @@ For a containerized local run, copy `.env.example` to `.env`, fill in the key, a
 
 Infera Engine is configured to use Groq by default. The supported default model is `openai/gpt-oss-120b`, and the app also supports `llama-3.3-70b-versatile` on Groq accounts that can access it. When using the optional low-power mode, Ollama can be enabled only for the lower-cost reasoning steps while the rest of the workflow remains on Groq.
 
-The scenario-generation pipeline intentionally keeps structured outputs small and constrained. This avoids malformed JSON and tool-call failures from large, overly detailed Groq responses. The expected scenario schema is exactly three scenarios, with short text fields, up to three evidence items in each list, and a maximum of four evidence factors per scenario.
+Structured Groq responses use JSON mode rather than requiring a tool call, then validate the result against the relevant Pydantic schema. This avoids failures when a model returns JSON as message text instead of making a required tool call. Scenario output is also kept intentionally concise: exactly three scenarios, short text fields, up to three evidence items in each list, and a maximum of four evidence factors per scenario.
 
 ## Quality and delivery
 
