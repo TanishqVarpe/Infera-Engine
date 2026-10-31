@@ -1,5 +1,4 @@
-from langchain_core.messages import HumanMessage
-from core.models import get_groq_llm
+from core.models import get_groq_llm, invoke_structured_output
 from core.state import BaseRateEstimate
 from core.agents.entity import entity_card_to_context
 
@@ -27,7 +26,13 @@ RULES:
 3. Give estimated_base_rate_pct 0-100.
 4. Name 1-3 comparable cases at similar scale, or say if none fit well.
 
-Return structured BaseRateEstimate.
+Return exactly one JSON object with these exact fields:
+{{
+  "reference_class": "Success outcomes for national-level political coalitions",
+  "estimated_base_rate_pct": 55,
+  "base_rate_reasoning": "Briefly explain the reference class and estimate.",
+  "comparable_cases": ["Comparable case"]
+}}
+Use the forecast's direction and the entity's scale in reference_class. Do not return separate reference_class_direction or scale fields. Include all fields and do not use Markdown fences.
 """
-    structured = llm.with_structured_output(BaseRateEstimate)
-    return structured.invoke([HumanMessage(content=prompt)])
+    return invoke_structured_output(llm, BaseRateEstimate, prompt)

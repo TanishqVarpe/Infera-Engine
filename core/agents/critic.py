@@ -30,9 +30,9 @@ Then propose one refined strongest scenario as plain analysis:
 - refinement rationale
 
 STRICT RULE:
-Do NOT write probability labels (High/Medium/Low), percentages, or scores.
-Those are computed only by the scoring pipeline, not by you.
-If you want to express confidence, describe the evidence factors instead.
+Do NOT assess or describe confidence, likelihood, or probability.
+Do NOT assign probability labels, percentages, or scores.
+Focus only on assumptions, blind spots, and concrete improvements.
 """
 
     response = llm.invoke([HumanMessage(content=prompt)])

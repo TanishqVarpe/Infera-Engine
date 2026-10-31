@@ -1,5 +1,4 @@
-from langchain_core.messages import HumanMessage
-from core.models import get_groq_llm
+from core.models import get_groq_llm, invoke_structured_output
 from core.state import EntityCard
 
 
@@ -21,13 +20,11 @@ Return:
 - jurisdiction (country/state)
 - role_or_context
 - disambiguation_note (e.g. "Not the US FDA — verify against research")
-- confidence (high | medium | low)
 - resolution_stage must be "provisional"
 
-Be honest. If unsure, use medium/low confidence.
+Return only a valid JSON object matching the requested fields. Do not use Markdown fences.
 """
-    structured = llm.with_structured_output(EntityCard)
-    card = structured.invoke([HumanMessage(content=prompt)])
+    card = invoke_structured_output(llm, EntityCard, prompt)
     card.resolution_stage = "provisional"
     return card
 
@@ -43,20 +40,20 @@ PROVISIONAL CARD:
 - Jurisdiction: {provisional.get('jurisdiction')}
 - Role: {provisional.get('role_or_context')}
 - Note: {provisional.get('disambiguation_note')}
-- Confidence: {provisional.get('confidence')}
+
 
 RESEARCH BRIEF (trust this over the provisional guess when they conflict):
 {research_brief}
 
 Rules:
 1. If research contradicts jurisdiction/role/org, CORRECT the card to match research.
-2. If research confirms it, keep values and set confidence to high.
+2. If research confirms it, keep the values.
 3. Set resolution_stage to "reconciled".
 
 Return the corrected EntityCard.
+Return only a valid JSON object matching the requested fields. Do not use Markdown fences.
 """
-    structured = llm.with_structured_output(EntityCard)
-    card = structured.invoke([HumanMessage(content=prompt)])
+    card = invoke_structured_output(llm, EntityCard, prompt)
     card.resolution_stage = "reconciled"
     return card
 
@@ -75,8 +72,6 @@ def entity_card_to_context(card) -> str:
     ]
     if card.disambiguation_note:
         lines.append(f"- IMPORTANT: {card.disambiguation_note}")
-    if card.confidence != "high":
-        lines.append(f"- Confidence: {card.confidence}")
     if card.resolution_stage == "provisional":
         lines.append("- WARNING: provisional only — not yet verified against research.")
     return "\n".join(lines)
